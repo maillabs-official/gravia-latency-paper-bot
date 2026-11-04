@@ -38,7 +38,8 @@ class PaperTests(unittest.TestCase):
         for name in ('a', 'b'):
             self.assertTrue(self.e.buy(name, 'YES', .5)[0])
         self.assertAlmostEqual(self.e.cash, 10)
-        self.assertFalse(self.e.buy('c', 'YES', .5)[0])
+        self.e.config = dict(CFG, order_size_usd=11)
+        self.assertEqual(self.e.buy('c', 'YES', .5)[1], 'position limit')
         self.assertAlmostEqual(PaperEngine(CFG, self.state_path).cash, 10)
 
     def test_daily_loss_limit_blocks_new_buys(self):
