@@ -1,13 +1,18 @@
 import json
 import unittest
+import tempfile
 from pathlib import Path
 from paper_engine import PaperEngine
 
 CFG = json.loads(Path(__file__).with_name('config.json').read_text())
 
 class PaperTests(unittest.TestCase):
-    def setUp(self): self.e = PaperEngine(CFG)
-    def test_initial_cash(self): self.assertEqual(self.e.cash, 50)
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.state_path = Path(self.tmp.name) / 'state.json'
+        self.e = PaperEngine(CFG, self.state_path)
+    def test_initial_cash(self): self.assertEqual(self.e.cash, 20)
     def test_latency(self): self.assertFalse(self.e.buy('btc','YES',.5,elapsed_ms=999)[0])
     def test_stale(self): self.assertFalse(self.e.buy('btc','YES',.5,data_age_ms=3001)[0])
     def test_two_positions(self):
@@ -17,7 +22,12 @@ class PaperTests(unittest.TestCase):
     def test_round_trip(self):
         self.assertTrue(self.e.buy('a','YES',.5)[0])
         self.assertTrue(self.e.sell('a','YES',.6)[0])
-        self.assertAlmostEqual(self.e.cash, 51)
+        self.assertAlmostEqual(self.e.cash, 21)
+    def test_restart_no_topup(self):
+        self.assertTrue(self.e.buy('a','YES',.5)[0])
+        e2 = PaperEngine(CFG, self.state_path)
+        self.assertEqual(e2.cash, 15)
+        self.assertEqual(len(e2.positions), 1)
     def test_no_real(self):
         bad=dict(CFG, real_trading_enabled=True)
         with self.assertRaises(ValueError): PaperEngine(bad)
