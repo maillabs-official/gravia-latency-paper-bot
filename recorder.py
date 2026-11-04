@@ -9,5 +9,4 @@ class JsonlRecorder:
 
     async def record(self, event):
         with self.path.open("a", encoding="utf-8") as f:
-            f.write(json.dumps(event, separators=(",", ":"), ensure_ascii=False) + "\\n")
-
+            f.write(json.dumps(event, separators=(",", ":"), ensure_ascii=False) + chr(10))
