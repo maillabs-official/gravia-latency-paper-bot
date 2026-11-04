@@ -1,0 +1,16 @@
+name: Read-only market discovery
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Discover BTC candidates (not verified)
+        run: python discover_markets.py --limit 100
