@@ -34,6 +34,22 @@ class PaperTests(unittest.TestCase):
         restarted = PaperEngine(CFG, self.state_path)
         self.assertAlmostEqual(restarted.cash, 19)
         self.assertAlmostEqual(restarted.realized_pnl, -1)
+    def test_no_automatic_topup_when_cash_insufficient(self):
+        for name in ('a', 'b'):
+            self.assertTrue(self.e.buy(name, 'YES', .5)[0])
+        self.assertAlmostEqual(self.e.cash, 10)
+        self.assertFalse(self.e.buy('c', 'YES', .5)[0])
+        self.assertAlmostEqual(PaperEngine(CFG, self.state_path).cash, 10)
+
+    def test_daily_loss_limit_blocks_new_buys(self):
+        for i in range(5):
+            name = str(i)
+            self.assertTrue(self.e.buy(name, 'YES', .5)[0])
+            self.assertTrue(self.e.sell(name, 'YES', .4)[0])
+        self.assertAlmostEqual(self.e.realized_pnl, -5)
+        self.assertFalse(self.e.buy('next', 'YES', .5)[0])
+        self.assertFalse(PaperEngine(CFG, self.state_path).buy('next', 'YES', .5)[0])
+
     def test_no_real(self):
         bad=dict(CFG, real_trading_enabled=True)
         with self.assertRaises(ValueError): PaperEngine(bad)
