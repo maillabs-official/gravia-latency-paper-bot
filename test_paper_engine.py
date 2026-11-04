@@ -28,6 +28,12 @@ class PaperTests(unittest.TestCase):
         e2 = PaperEngine(CFG, self.state_path)
         self.assertEqual(e2.cash, 15)
         self.assertEqual(len(e2.positions), 1)
+    def test_loss_persists_without_topup(self):
+        self.assertTrue(self.e.buy('a','YES',.5)[0])
+        self.assertTrue(self.e.sell('a','YES',.4)[0])
+        restarted = PaperEngine(CFG, self.state_path)
+        self.assertAlmostEqual(restarted.cash, 19)
+        self.assertAlmostEqual(restarted.realized_pnl, -1)
     def test_no_real(self):
         bad=dict(CFG, real_trading_enabled=True)
         with self.assertRaises(ValueError): PaperEngine(bad)
